@@ -4,6 +4,8 @@ var mongoose = require('mongoose');
 
 var Leaders = require('../models/leadership');
 
+var Verify = require('./verify');
+
 var leaderRouter = express.Router();
 
 leaderRouter.use(bodyParser.json());
