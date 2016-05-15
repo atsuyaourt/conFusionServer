@@ -9,10 +9,8 @@ var favoriteRouter = express.Router();
 favoriteRouter.use(bodyParser.json());
 
 favoriteRouter.route('/')
-.all(Verify.verifyOrdinaryUser)
-
-.get(function (req, res, next) {
-  var userId = req.decoded._doc._id;
+.get(Verify.verifyOrdinaryUser, function (req, res, next) {
+  var userId = req.decoded._id;
   Favorites.findOne({"postedBy": userId})
   .populate('postedBy')
   .populate('dishes')
@@ -21,11 +19,10 @@ favoriteRouter.route('/')
   });
 })
 
-.post(function (req, res, next) {
-  var userId = req.decoded._doc._id;
+.post(Verify.verifyOrdinaryUser, function (req, res, next) {
+  var userId = req.decoded._id;
   Favorites.findOne({"postedBy": userId}, function (err, fav) {
-    if (err)
-      throw err;
+    if (err) next(err);
     if (!fav) {
       fav = new Favorites();
       fav.postedBy = userId;
@@ -35,19 +32,17 @@ favoriteRouter.route('/')
       fav.dishes.push(req.body._id);
     }
     fav.save(function (err, fav) {
-      if (err)
-        throw err;
+      if (err) next(err);
       console.log('Updated Favorites!');
       res.json(fav);
     });
   });
 })
 
-.delete(function (req, res, next) {
-  var userId = req.decoded._doc._id;
+.delete(Verify.verifyOrdinaryUser, function (req, res, next) {
+  var userId = req.decoded._id;
   Favorites.findOneAndRemove({"postedBy": userId}, function (err, fav) {
-    if (err)
-      throw err;
+    if (err) next(err);
     console.log('Deleted Favorites!');
     res.json(fav);
   });
@@ -55,11 +50,10 @@ favoriteRouter.route('/')
 
 favoriteRouter.route('/:dishId')
 .delete (Verify.verifyOrdinaryUser, function (req, res, next) {
-  var userId = req.decoded._doc._id;
+  var userId = req.decoded._id;
   console.log(userId);
   Favorites.findOne({"postedBy": userId}, function (err, fav) {
-    if (err)
-      throw err;
+    if (err) next(err);
     var idx = -1;
     if (fav && fav.dishes)
       idx = fav.dishes.indexOf(req.params.dishId);
@@ -67,16 +61,14 @@ favoriteRouter.route('/:dishId')
       fav.dishes.splice(idx, 1);
       if (fav.dishes.length == 0) {
         fav.remove(function (err, fav) {
-          if (err)
-            throw err;
+          if (err) next(err);
           console.log('Updated Favorites!');
           res.json(null);
         });
       }
       else {
         fav.save(function (err, fav) {
-          if (err)
-            throw err;
+          if (err) next(err);
           console.log('Updated Favorites!');
           res.json(fav);
         });
